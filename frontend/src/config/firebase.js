@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBommpqdW8QpJyzjyViqGEGRS6qd1wu7nI",
+  apiKey: "your_api_token_from_firebase",
   authDomain: "smarttaskmanager-ecee7.firebaseapp.com",
   projectId: "smarttaskmanager-ecee7",
   storageBucket: "smarttaskmanager-ecee7.firebasestorage.app",
