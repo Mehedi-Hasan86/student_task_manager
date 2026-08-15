@@ -73,6 +73,7 @@ export default function Register() {
       popupPromise = signInWithPopup(auth, googleProvider);
       await new Promise((resolve) => setTimeout(resolve, 4000));
       if (!opened) {
+        popupPromise.catch(() => {});
         await startRedirect();
         return;
       }
