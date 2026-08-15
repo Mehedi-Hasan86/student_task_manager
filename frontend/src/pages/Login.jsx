@@ -15,12 +15,18 @@ export default function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const hadRedirect = sessionStorage.getItem('gs_redirect_started');
+    if (hadRedirect) sessionStorage.removeItem('gs_redirect_started');
     const handleRedirectResult = async () => {
       try {
         const result = await getRedirectResult(auth);
         if (result?.user) {
           await loginWithGoogle(result.user.displayName, result.user.email);
           navigate('/dashboard');
+        } else if (hadRedirect) {
+          setError(
+            'Google sign-in did not complete. The popup may have been blocked — click Google Sign-In again, or use email and password.'
+          );
         }
       } catch (err) {
         if (!IGNORED_AUTH_ERRORS.includes(err.code)) {
@@ -46,21 +52,41 @@ export default function Login() {
     }
   };
 
+  const startRedirect = () => {
+    sessionStorage.setItem('gs_redirect_started', '1');
+    return signInWithRedirect(auth, googleProvider);
+  };
+
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
+    let opened = false;
+    const origOpen = window.open;
+    window.open = (...args) => {
+      opened = true;
+      return origOpen.apply(window, args);
+    };
+    let popupPromise;
     try {
-      try {
-        const result = await signInWithPopup(auth, googleProvider);
-        await loginWithGoogle(result.user.displayName, result.user.email);
-        navigate('/dashboard');
-      } catch (popupErr) {
-        if (popupErr.code !== 'auth/popup-blocked') throw popupErr;
-        await signInWithRedirect(auth, googleProvider);
+      popupPromise = signInWithPopup(auth, googleProvider);
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+      if (!opened) {
+        await startRedirect();
+        return;
       }
+      const result = await popupPromise;
+      await loginWithGoogle(result.user.displayName, result.user.email);
+      navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Google Sign-In failed. Please check your internet connection.');
+      if (err.code === 'auth/popup-blocked') {
+        await startRedirect();
+        return;
+      }
+      if (!IGNORED_AUTH_ERRORS.includes(err.code)) {
+        setError(err.response?.data?.message || err.message || 'Google Sign-In failed. Please check your internet connection.');
+      }
     } finally {
+      window.open = origOpen;
       setLoading(false);
     }
   };
@@ -141,6 +167,9 @@ export default function Login() {
           <Link to="/register" className="font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400">
             Register
           </Link>
+        </p>
+        <p className="mt-4 text-center text-[10px] text-gray-400 dark:text-gray-500">
+          build {typeof __BUILD_SHA__ !== 'undefined' ? __BUILD_SHA__ : 'dev'}
         </p>
       </div>
     </div>
