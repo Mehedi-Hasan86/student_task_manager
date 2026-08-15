@@ -1,3 +1,11 @@
+/**
+ * Task routes — /api/tasks.
+ *
+ * All routes require JWT authentication (router-level protect) and scope
+ * every query to the authenticated user, so users can never see or modify
+ * each other's tasks. Supports search / filter / sort via query params
+ * and computes summary statistics for the dashboard.
+ */
 const express = require('express');
 const Task = require('../models/Task');
 const { protect } = require('../middleware/auth');
@@ -6,6 +14,7 @@ const router = express.Router();
 
 router.use(protect);
 
+/** GET /api/tasks/stats — summary counts for the dashboard cards/charts. */
 router.get('/stats', async (req, res) => {
   try {
     const tasks = await Task.find({ user: req.user._id });
@@ -37,6 +46,11 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/tasks — list tasks with optional filtering and sorting.
+ * Query params: ?search= (title regex), ?status=, ?priority=, ?sort=
+ * (deadline | deadline-desc | created | created-asc).
+ */
 router.get('/', async (req, res) => {
   try {
     const { search, status, priority, sort } = req.query;
@@ -65,6 +79,7 @@ router.get('/', async (req, res) => {
   }
 });
 
+/** POST /api/tasks — create a new task for the current user. */
 router.post('/', async (req, res) => {
   try {
     const { title, description, deadline, priority, status } = req.body;
@@ -88,6 +103,7 @@ router.post('/', async (req, res) => {
   }
 });
 
+/** GET /api/tasks/:id — fetch a single task (scoped to the owner). */
 router.get('/:id', async (req, res) => {
   try {
     const task = await Task.findOne({ _id: req.params.id, user: req.user._id });
@@ -100,6 +116,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+/** PUT /api/tasks/:id — partially update a task (scoped to the owner). */
 router.put('/:id', async (req, res) => {
   try {
     const task = await Task.findOne({ _id: req.params.id, user: req.user._id });
@@ -107,6 +124,7 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Task not found' });
     }
 
+    // Only assign fields that were actually provided.
     const { title, description, deadline, priority, status } = req.body;
     if (title !== undefined) task.title = title;
     if (description !== undefined) task.description = description;
@@ -121,6 +139,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+/** DELETE /api/tasks/:id — remove a task (scoped to the owner). */
 router.delete('/:id', async (req, res) => {
   try {
     const task = await Task.findOne({ _id: req.params.id, user: req.user._id });

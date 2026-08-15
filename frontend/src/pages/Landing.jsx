@@ -1,8 +1,25 @@
+/**
+ * Landing page — public marketing / hero view shown at "/".
+ *
+ * Introduces the application and links to the Register and Login pages.
+ * The feature list is static content defined inline for simplicity.
+ */
 import { Link } from 'react-router-dom';
+
+/** Feature highlights rendered as cards on the landing page. */
+const FEATURES = [
+  { title: 'Task Management', desc: 'Create, edit, delete tasks with deadlines and priority levels.' },
+  { title: 'Smart Dashboard', desc: 'Visual summary of total, completed, pending, and overdue tasks.' },
+  { title: 'Search & Filter', desc: 'Live search by title, filter by status, sort by deadline.' },
+  { title: 'Progress Tracking', desc: 'Toggle tasks between Pending, In Progress, and Completed.' },
+  { title: 'Analytics Charts', desc: 'Chart.js visualizations for status and priority distribution.' },
+  { title: 'Dark / Light Mode', desc: 'Comfortable theme for studying day or night.' },
+];
 
 export default function Landing() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:py-24">
+      {/* Hero section */}
       <div className="text-center">
         <span className="inline-block rounded-full bg-primary-100 px-4 py-1.5 text-sm font-medium text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">
           IIUC CSE-3532 Project
@@ -25,15 +42,9 @@ export default function Landing() {
         </div>
       </div>
 
+      {/* Feature cards grid */}
       <div className="mt-20 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {[
-          { title: 'Task Management', desc: 'Create, edit, delete tasks with deadlines and priority levels.' },
-          { title: 'Smart Dashboard', desc: 'Visual summary of total, completed, pending, and overdue tasks.' },
-          { title: 'Search & Filter', desc: 'Live search by title, filter by status, sort by deadline.' },
-          { title: 'Progress Tracking', desc: 'Toggle tasks between Pending, In Progress, and Completed.' },
-          { title: 'Analytics Charts', desc: 'Chart.js visualizations for status and priority distribution.' },
-          { title: 'Dark / Light Mode', desc: 'Comfortable theme for studying day or night.' },
-        ].map((feature) => (
+        {FEATURES.map((feature) => (
           <div key={feature.title} className="card">
             <h3 className="font-semibold text-gray-900 dark:text-white">{feature.title}</h3>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{feature.desc}</p>

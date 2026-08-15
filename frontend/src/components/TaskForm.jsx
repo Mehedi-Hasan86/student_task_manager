@@ -1,5 +1,13 @@
+/**
+ * TaskForm — modal dialog for creating and editing tasks.
+ *
+ * Controlled by the Dashboard: opens with an empty form for new tasks or
+ * pre-filled with the task being edited. Submits via the parent's
+ * onSubmit handler. Status field is only shown when editing.
+ */
 import { useEffect, useState } from 'react';
 
+/** Initial values for a blank task form. */
 const emptyForm = {
   title: '',
   description: '',
@@ -11,6 +19,7 @@ const emptyForm = {
 export default function TaskForm({ isOpen, onClose, onSubmit, task, loading }) {
   const [form, setForm] = useState(emptyForm);
 
+  // Sync the form with the task being edited whenever the modal opens.
   useEffect(() => {
     if (task) {
       setForm({
@@ -27,6 +36,7 @@ export default function TaskForm({ isOpen, onClose, onSubmit, task, loading }) {
 
   if (!isOpen) return null;
 
+  /** Updates a single field by its input name. */
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -38,6 +48,7 @@ export default function TaskForm({ isOpen, onClose, onSubmit, task, loading }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Click-outside overlay closes the modal */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="card relative z-10 w-full max-w-lg">
         <div className="mb-5 flex items-center justify-between">
@@ -47,6 +58,7 @@ export default function TaskForm({ isOpen, onClose, onSubmit, task, loading }) {
           <button
             onClick={onClose}
             className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+            aria-label="Close"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -55,6 +67,7 @@ export default function TaskForm({ isOpen, onClose, onSubmit, task, loading }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Title */}
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Title *
@@ -69,6 +82,7 @@ export default function TaskForm({ isOpen, onClose, onSubmit, task, loading }) {
             />
           </div>
 
+          {/* Description */}
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Description
@@ -83,6 +97,7 @@ export default function TaskForm({ isOpen, onClose, onSubmit, task, loading }) {
             />
           </div>
 
+          {/* Deadline + Priority */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -109,6 +124,7 @@ export default function TaskForm({ isOpen, onClose, onSubmit, task, loading }) {
             </div>
           </div>
 
+          {/* Status — editable only while editing an existing task */}
           {task && (
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -122,6 +138,7 @@ export default function TaskForm({ isOpen, onClose, onSubmit, task, loading }) {
             </div>
           )}
 
+          {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className="btn-secondary">
               Cancel

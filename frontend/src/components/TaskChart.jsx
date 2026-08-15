@@ -1,7 +1,15 @@
+/**
+ * TaskChart — dashboard analytics charts.
+ *
+ * Renders a doughnut chart of task status distribution and a bar chart of
+ * tasks by priority, using Chart.js via react-chartjs-2. Chart colors and
+ * axis text adapt to the active dark/light theme.
+ */
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { useTheme } from '../context/ThemeContext';
 
+// Register the Chart.js components used by both charts.
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 export default function TaskChart({ stats }) {
@@ -9,6 +17,7 @@ export default function TaskChart({ stats }) {
   const textColor = darkMode ? '#e5e7eb' : '#374151';
   const gridColor = darkMode ? '#374151' : '#e5e7eb';
 
+  /** Doughnut dataset: task counts grouped by status. */
   const statusData = {
     labels: ['Pending', 'In Progress', 'Completed'],
     datasets: [
@@ -24,6 +33,7 @@ export default function TaskChart({ stats }) {
     ],
   };
 
+  /** Bar dataset: task counts grouped by priority. */
   const priorityData = {
     labels: ['Low', 'Medium', 'High'],
     datasets: [
@@ -50,6 +60,7 @@ export default function TaskChart({ stats }) {
     },
   };
 
+  // Bar chart additionally needs themed axes.
   const barOptions = {
     ...chartOptions,
     scales: {

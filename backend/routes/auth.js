@@ -1,3 +1,12 @@
+/**
+ * Authentication routes — /api/auth.
+ *
+ * register  : create an account (bcrypt-hashed password) and issue a JWT.
+ * login     : verify credentials and issue a JWT.
+ * me        : return the profile of the authenticated user (JWT required).
+ * firebase  : sync a Firebase (Google) authenticated identity with the
+ *             local user store and issue a JWT.
+ */
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
@@ -5,9 +14,11 @@ const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
+/** Signs a JWT for the given user id (30-day expiry). */
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
+/** POST /api/auth/register — create a new account. */
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -34,6 +45,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
+/** POST /api/auth/login — authenticate with email + password. */
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -58,6 +70,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
+/** GET /api/auth/me — current user profile (requires JWT). */
 router.get('/me', protect, async (req, res) => {
   res.json({
     _id: req.user._id,
@@ -66,6 +79,7 @@ router.get('/me', protect, async (req, res) => {
   });
 });
 
+/** POST /api/auth/firebase — Google (Firebase) identity sync. */
 router.post('/firebase', async (req, res) => {
   try {
     const { name, email } = req.body;
@@ -74,6 +88,7 @@ router.post('/firebase', async (req, res) => {
       return res.status(400).json({ message: 'Email is required' });
     }
 
+    // Reuse the account if one already exists for this email.
     let user = await User.findOne({ email });
     if (!user) {
       // Create user with a secure random password since they authenticate via Google Firebase

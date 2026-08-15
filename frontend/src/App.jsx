@@ -1,3 +1,10 @@
+/**
+ * Root application component.
+ *
+ * Wires global providers (theme + auth) and declares the route table.
+ * The /dashboard route is wrapped in <ProtectedRoute> so unauthenticated
+ * visitors are redirected to /login.
+ */
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -10,6 +17,7 @@ import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
+    // ThemeProvider must wrap AuthProvider: Navbar uses both contexts.
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
@@ -27,6 +35,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* Catch-all: unknown routes fall back to the landing page. */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>

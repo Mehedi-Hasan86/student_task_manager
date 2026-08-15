@@ -1,17 +1,30 @@
+/**
+ * TaskCard — single task display card.
+ *
+ * Shows title, description, priority badge, deadline (highlighted red when
+ * overdue) and a status pill that cycles Pending -> In Progress ->
+ * Completed on click. Edit and Delete actions are delegated to the parent
+ * via props.
+ */
+
+/** Tailwind badge classes per priority level. */
 const priorityStyles = {
   Low: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
   Medium: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
   High: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
 };
 
+/** Tailwind badge classes per status. */
 const statusStyles = {
   Pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
   'In Progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
   Completed: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
 };
 
+/** Order in which the status pill cycles. */
 const statusCycle = ['Pending', 'In Progress', 'Completed'];
 
+/** Formats an ISO date string for display (e.g. "Jan 5, 2026"). */
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',
@@ -20,6 +33,7 @@ function formatDate(dateStr) {
   });
 }
 
+/** A task is overdue when its deadline passed and it isn't completed. */
 function isOverdue(task) {
   return task.status !== 'Completed' && new Date(task.deadline) < new Date();
 }
@@ -27,6 +41,7 @@ function isOverdue(task) {
 export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
   const overdue = isOverdue(task);
 
+  /** Advances the task to the next status in the cycle. */
   const cycleStatus = () => {
     const idx = statusCycle.indexOf(task.status);
     const next = statusCycle[(idx + 1) % statusCycle.length];
@@ -35,6 +50,7 @@ export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
 
   return (
     <div className={`card transition hover:shadow-md ${overdue ? 'border-red-300 dark:border-red-800' : ''}`}>
+      {/* Title + priority/overdue badges */}
       <div className="mb-3 flex items-start justify-between gap-2">
         <h3 className="font-semibold text-gray-900 dark:text-white">{task.title}</h3>
         <div className="flex shrink-0 gap-1">
@@ -49,12 +65,14 @@ export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
         </div>
       </div>
 
+      {/* Description (clamped to two lines) */}
       {task.description && (
         <p className="mb-3 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
           {task.description}
         </p>
       )}
 
+      {/* Deadline */}
       <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -64,6 +82,7 @@ export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
         </span>
       </div>
 
+      {/* Status pill + Edit/Delete actions */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <button
           onClick={cycleStatus}

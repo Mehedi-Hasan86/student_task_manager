@@ -1,3 +1,11 @@
+/**
+ * SummaryCards — four dashboard stat cards.
+ *
+ * Renders Total / Completed / Pending / Overdue task counts from the
+ * stats object returned by GET /api/tasks/stats.
+ */
+
+/** Card definitions: stat key, label, accent color, and icon path. */
 const cards = [
   { key: 'total', label: 'Total Tasks', color: 'bg-blue-500', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
   { key: 'completed', label: 'Completed', color: 'bg-green-500', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },

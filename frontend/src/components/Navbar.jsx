@@ -1,3 +1,9 @@
+/**
+ * Navbar — sticky top navigation bar.
+ *
+ * Shows the app logo, a dark/light theme toggle, and either auth actions
+ * (Login/Register) or the signed-in user's name + Logout button.
+ */
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -9,6 +15,7 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/90 backdrop-blur dark:border-gray-800 dark:bg-gray-900/90">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
+        {/* Logo — links to dashboard for signed-in users, landing otherwise */}
         <Link to={user ? '/dashboard' : '/'} className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600 text-white">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -21,6 +28,7 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-3">
+          {/* Theme toggle */}
           <button
             onClick={toggleTheme}
             className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
@@ -37,6 +45,7 @@ export default function Navbar() {
             )}
           </button>
 
+          {/* Auth actions — conditional on sign-in state */}
           {user ? (
             <>
               <span className="hidden text-sm text-gray-600 dark:text-gray-400 sm:inline">

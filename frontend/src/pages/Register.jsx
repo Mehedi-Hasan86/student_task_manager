@@ -1,3 +1,13 @@
+/**
+ * Register page — new account creation + Google (Firebase) sign-in.
+ *
+ * The Google sign-in logic mirrors Login.jsx exactly:
+ *  1. localhost        -> Firebase popup flow.
+ *  2. deployed         -> Google Identity Services (GIS) in-page picker.
+ *  3. fallback         -> signInWithRedirect when GIS is unavailable.
+ * A pending redirect result is finalized on mount; empty results are
+ * surfaced with a diagnostic message instead of failing silently.
+ */
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -10,7 +20,10 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase';
 
+/** Google OAuth client ID used by the GIS in-page sign-in. */
 const GIS_CLIENT_ID = '784953740224-74pghlgspih40vk141nsvhaf62sp2rtg.apps.googleusercontent.com';
+
+/** Errors caused by the user cancelling a popup/redirect — never surfaced. */
 const IGNORED_AUTH_ERRORS = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/redirect-cancelled-by-user'];
 
 export default function Register() {
@@ -22,6 +35,7 @@ export default function Register() {
   const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
+  // Finalize any pending redirect sign-in on mount (see Login.jsx).
   useEffect(() => {
     const hadRedirect = sessionStorage.getItem('gs_redirect_started');
     if (hadRedirect) sessionStorage.removeItem('gs_redirect_started');
@@ -46,6 +60,7 @@ export default function Register() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /** Name + email + password registration via the auth context. */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -60,11 +75,13 @@ export default function Register() {
     }
   };
 
+  /** Starts the Firebase redirect flow, marking it so failures are visible. */
   const startRedirect = () => {
     sessionStorage.setItem('gs_redirect_started', '1');
     return signInWithRedirect(auth, googleProvider);
   };
 
+  /** Exchanges a GIS ID token for a Firebase credential and signs in. */
   const handleGisCredential = async (credential) => {
     setLoading(true);
     setError('');
@@ -79,16 +96,19 @@ export default function Register() {
     }
   };
 
+  /** Entry point for the Google Sign-In button (see strategy above). */
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
     try {
+      // Local development: popup flow behaves reliably on localhost.
       if (window.location.hostname === 'localhost') {
         const result = await signInWithPopup(auth, googleProvider);
         await loginWithGoogle(result.user.displayName, result.user.email);
         navigate('/dashboard');
         return;
       }
+      // Production: use the GIS in-page picker when available.
       if (window.google?.accounts?.id) {
         window.google.accounts.id.initialize({
           client_id: GIS_CLIENT_ID,
@@ -99,6 +119,7 @@ export default function Register() {
         window.google.accounts.id.prompt();
         return;
       }
+      // Last resort: classic redirect flow.
       await startRedirect();
     } catch (err) {
       if (!IGNORED_AUTH_ERRORS.includes(err.code)) {
@@ -123,6 +144,7 @@ export default function Register() {
           </div>
         )}
 
+        {/* Registration form */}
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -169,6 +191,7 @@ export default function Register() {
           </button>
         </form>
 
+        {/* Divider */}
         <div className="mt-6">
           <div className="relative flex items-center justify-center">
             <div className="absolute w-full border-t border-gray-300 dark:border-gray-700"></div>
@@ -177,6 +200,7 @@ export default function Register() {
             </span>
           </div>
 
+          {/* Google Sign-In button */}
           <button
             type="button"
             onClick={handleGoogleSignIn}
@@ -199,6 +223,7 @@ export default function Register() {
             Sign In
           </Link>
         </p>
+        {/* Build identifier (injected by Vite) — helps verify which deployment is live. */}
         <p className="mt-4 text-center text-[10px] text-gray-400 dark:text-gray-500">
           build {typeof __BUILD_SHA__ !== 'undefined' ? __BUILD_SHA__ : 'dev'}
         </p>

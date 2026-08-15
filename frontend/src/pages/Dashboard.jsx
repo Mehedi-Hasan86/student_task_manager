@@ -1,3 +1,10 @@
+/**
+ * Dashboard — the authenticated task management view.
+ *
+ * Loads the user's tasks plus summary statistics, supports live search,
+ * status/priority filtering and sorting, and drives the create/edit modal
+ * and delete/status actions.
+ */
 import { useCallback, useEffect, useState } from 'react';
 import { taskAPI } from '../services/api';
 import SummaryCards from '../components/SummaryCards';
@@ -8,18 +15,24 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
   const { user } = useAuth();
+
+  // Task data + UI state.
   const [tasks, setTasks] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Modal state for create/edit.
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // Filter / sort controls.
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [sort, setSort] = useState('deadline');
 
+  /** Fetches tasks (with active filters) and summary stats in parallel. */
   const fetchData = useCallback(async () => {
     try {
       const params = { sort };
@@ -40,11 +53,13 @@ export default function Dashboard() {
     }
   }, [search, statusFilter, priorityFilter, sort]);
 
+  // Debounce search input (300ms) so the API isn't hammered per keystroke.
   useEffect(() => {
     const timer = setTimeout(fetchData, search ? 300 : 0);
     return () => clearTimeout(timer);
   }, [fetchData, search]);
 
+  /** Creates a new task or updates the task being edited. */
   const handleCreateOrUpdate = async (formData) => {
     setSubmitting(true);
     try {
@@ -63,6 +78,7 @@ export default function Dashboard() {
     }
   };
 
+  /** Deletes a task after confirmation. */
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this task permanently?')) return;
     try {
@@ -73,6 +89,7 @@ export default function Dashboard() {
     }
   };
 
+  /** Updates a task's status (called from the status cycle button). */
   const handleStatusChange = async (id, status) => {
     try {
       await taskAPI.updateTask(id, { status });
@@ -82,11 +99,13 @@ export default function Dashboard() {
     }
   };
 
+  /** Opens the modal pre-filled with an existing task. */
   const openEdit = (task) => {
     setEditingTask(task);
     setFormOpen(true);
   };
 
+  /** Opens the modal for a brand-new task. */
   const openCreate = () => {
     setEditingTask(null);
     setFormOpen(true);
@@ -94,6 +113,7 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      {/* Page header + New Task button */}
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
@@ -110,9 +130,11 @@ export default function Dashboard() {
       </div>
 
       <div className="space-y-6">
+        {/* Summary + analytics */}
         <SummaryCards stats={stats} />
         <TaskChart stats={stats} />
 
+        {/* Tasks section with search/filter/sort */}
         <div className="card">
           <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">My Tasks</h2>
@@ -157,6 +179,7 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Loading / empty / list states */}
           {loading ? (
             <div className="flex justify-center py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
@@ -184,6 +207,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Create / edit modal */}
       <TaskForm
         isOpen={formOpen}
         onClose={() => { setFormOpen(false); setEditingTask(null); }}

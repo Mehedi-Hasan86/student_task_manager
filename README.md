@@ -46,7 +46,7 @@ The **Student Task Manager System** is a purpose-built, responsive web applicati
 | **Backend** | Node.js & Express.js | RESTful API server handling business logic, authentication, and routing. |
 | **Database** | MongoDB & Mongoose | Document database for persistent storage, using Object Data Modeling (ODM). |
 | **Auth Services** | JWT, bcryptjs, Firebase Auth | Multi-user email/password signup and direct Google OAuth login integration. |
-| **Deployment** | Render / Node Server | Production static serving via Express middleware & Render automation. |
+| **Deployment** | Vercel | Frontend + backend deployed as Vercel services behind /api rewrites. |
 | **Dev Tooling** | Git/GitHub, VS Code | Version control, branch management, and collaborative workspace. |
 
 ---
@@ -110,7 +110,7 @@ student_task_manager/
 │
 ├── screenshots of project/   # Application preview screenshots
 ├── package.json             # Monorepo root build & deployment scripts
-├── render.yaml              # Render blueprint deployment configuration
+├── vercel.json              # Vercel services & rewrite configuration
 ├── run.sh                   # Unix shell script to run backend and frontend concurrently
 └── run.bat                  # Windows batch script to run backend and frontend concurrently
 ```
@@ -170,12 +170,9 @@ student_task_manager/
 ### Frontend (`frontend/.env`)
 | Key | Description |
 | :--- | :--- |
-| `VITE_FIREBASE_API_KEY` | Firebase Web API Key |
-| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth Domain |
-| `VITE_FIREBASE_PROJECT_ID` | Firebase Project ID |
-| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase Storage Bucket |
-| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase Sender ID |
-| `VITE_FIREBASE_APP_ID` | Firebase App ID |
+| `VITE_API_BASE_URL` | Backend API base URL (optional for dev — Vite proxies `/api` to `localhost:5000` by default) |
+
+> Note: The Firebase configuration is embedded directly in `frontend/src/config/firebase.js` (safe for client-side apps) — no `VITE_FIREBASE_*` variables are required.
 
 ---
 
@@ -252,8 +249,19 @@ npm run build
 npm start
 ```
 
-### Deploying to Render
-The repository includes a `render.yaml` Blueprint specification. Simply connect the repository to Render to auto-deploy the MongoDB instance and Node.js web service.
+### Deploying to Vercel
+The repository includes a `vercel.json` that splits the project into two services:
+* **Frontend service** (root `frontend/`) — Vite React app with an SPA rewrite (`/(.*)` → `/index.html`).
+* **Backend service** (root `backend/`, entrypoint `server.js`) — Express API mounted behind `/api/(.*)` rewrites.
+
+Connect the GitHub repository to Vercel and set these environment variables on the backend service: `MONGODB_URI`, `JWT_SECRET`. The live demo is deployed at `https://studenttaskmanager-mehedi-hasan86s-projects.vercel.app`.
+
+#### Enabling Google Sign-In on a New Domain
+Google sign-in (Firebase Auth) requires every deployed domain to be whitelisted in Google Cloud Console. If you see `error 400: origin_mismatch`, add the domain to:
+1. **Firebase Console → Authentication → Settings → Authorized domains** — add the Vercel domain.
+2. **Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client IDs** (the Firebase web client) — add the domain under **Authorized JavaScript origins** (e.g. `https://your-app.vercel.app`) and the login/register paths under **Authorized redirect URIs** (e.g. `https://your-app.vercel.app/login`, `.../register`).
+
+The app auto-redirects unauthenticated Vercel preview URLs (hash deployments) to the authorized stable domain.
 
 ---
 
