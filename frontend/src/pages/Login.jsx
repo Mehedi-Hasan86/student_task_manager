@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase';
 
 const IGNORED_AUTH_ERRORS = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/redirect-cancelled-by-user'];
@@ -48,12 +48,20 @@ export default function Login() {
 
   const handleGoogleSignIn = async () => {
     setError('');
+    setLoading(true);
     try {
-      await signInWithRedirect(auth, googleProvider);
-    } catch (err) {
-      if (!IGNORED_AUTH_ERRORS.includes(err.code)) {
-        setError(err.message || 'Google Sign-In failed. Please check your internet connection.');
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        await loginWithGoogle(result.user.displayName, result.user.email);
+        navigate('/dashboard');
+      } catch (popupErr) {
+        if (popupErr.code !== 'auth/popup-blocked') throw popupErr;
+        await signInWithRedirect(auth, googleProvider);
       }
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Google Sign-In failed. Please check your internet connection.');
+    } finally {
+      setLoading(false);
     }
   };
 
