@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { signInWithPopup, signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import {
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  signInWithCredential,
+  GoogleAuthProvider,
+} from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase';
 
+const GIS_CLIENT_ID = '784953740224-74pghlgspih40vk141nsvhaf62sp2rtg.apps.googleusercontent.com';
 const IGNORED_AUTH_ERRORS = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/redirect-cancelled-by-user'];
 
 export default function Register() {
@@ -58,6 +65,20 @@ export default function Register() {
     return signInWithRedirect(auth, googleProvider);
   };
 
+  const handleGisCredential = async (credential) => {
+    setLoading(true);
+    setError('');
+    try {
+      const cred = GoogleAuthProvider.credential(credential);
+      const result = await signInWithCredential(auth, cred);
+      await loginWithGoogle(result.user.displayName, result.user.email);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Google Sign-In failed.');
+      setLoading(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
@@ -66,9 +87,19 @@ export default function Register() {
         const result = await signInWithPopup(auth, googleProvider);
         await loginWithGoogle(result.user.displayName, result.user.email);
         navigate('/dashboard');
-      } else {
-        await startRedirect();
+        return;
       }
+      if (window.google?.accounts?.id) {
+        window.google.accounts.id.initialize({
+          client_id: GIS_CLIENT_ID,
+          callback: (resp) => {
+            if (resp?.credential) handleGisCredential(resp.credential);
+          },
+        });
+        window.google.accounts.id.prompt();
+        return;
+      }
+      await startRedirect();
     } catch (err) {
       if (!IGNORED_AUTH_ERRORS.includes(err.code)) {
         setError(err.response?.data?.message || err.message || 'Google Sign-In failed. Please check your internet connection.');
