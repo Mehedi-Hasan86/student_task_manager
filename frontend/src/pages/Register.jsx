@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithRedirect, getRedirectResult } from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase';
+
+const IGNORED_AUTH_ERRORS = ['auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/redirect-cancelled-by-user'];
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -12,6 +14,24 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          await loginWithGoogle(result.user.displayName, result.user.email);
+          navigate('/dashboard');
+        }
+      } catch (err) {
+        if (!IGNORED_AUTH_ERRORS.includes(err.code)) {
+          setError(err.message || 'Google Sign-In failed. Please try again.');
+        }
+      }
+    };
+    handleRedirectResult();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,15 +49,12 @@ export default function Register() {
 
   const handleGoogleSignIn = async () => {
     setError('');
-    setLoading(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      await loginWithGoogle(result.user.displayName, result.user.email);
-      navigate('/dashboard');
+      await signInWithRedirect(auth, googleProvider);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Google Sign-In failed. Please check your internet connection.');
-    } finally {
-      setLoading(false);
+      if (!IGNORED_AUTH_ERRORS.includes(err.code)) {
+        setError(err.message || 'Google Sign-In failed. Please check your internet connection.');
+      }
     }
   };
 

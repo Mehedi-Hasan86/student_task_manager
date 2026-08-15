@@ -1,4 +1,5 @@
 require('dotenv').config();
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -18,10 +19,12 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 
-if (process.env.NODE_ENV === 'production') {
+const distIndex = path.join(__dirname, '../frontend/dist/index.html');
+
+if (process.env.NODE_ENV === 'production' && fs.existsSync(distIndex)) {
   app.use(express.static(path.join(__dirname, '../frontend/dist')));
   app.get('*', (_req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+    res.sendFile(distIndex);
   });
 }
 

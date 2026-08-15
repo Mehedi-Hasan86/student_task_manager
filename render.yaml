@@ -1,12 +1,20 @@
+databases:
+  - name: student-task-manager-db
+    databaseName: student_task_manager
+    user: student_task_manager_user
+    plan: free
+
 services:
   - type: web
     name: student-task-manager
     runtime: node
+    rootDir: backend
+    plan: free
     buildCommand: npm install
     startCommand: npm start
     envVars:
       - key: MONGODB_URI
-        sync: false
+        value: "#{database.connectString}"
       - key: JWT_SECRET
         sync: false
       - key: NODE_ENV
