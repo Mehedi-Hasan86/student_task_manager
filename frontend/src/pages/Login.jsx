@@ -63,8 +63,9 @@ export default function Login() {
     let opened = false;
     const origOpen = window.open;
     window.open = (...args) => {
-      opened = true;
-      return origOpen.apply(window, args);
+      const win = origOpen.apply(window, args);
+      opened = !!win;
+      return win;
     };
     let popupPromise;
     try {
