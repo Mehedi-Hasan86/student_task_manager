@@ -61,35 +61,19 @@ export default function Register() {
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
-    let opened = false;
-    const origOpen = window.open;
-    window.open = (...args) => {
-      const win = origOpen.apply(window, args);
-      opened = !!win;
-      return win;
-    };
-    let popupPromise;
     try {
-      popupPromise = signInWithPopup(auth, googleProvider);
-      await new Promise((resolve) => setTimeout(resolve, 4000));
-      if (!opened) {
-        popupPromise.catch(() => {});
+      if (window.location.hostname === 'localhost') {
+        const result = await signInWithPopup(auth, googleProvider);
+        await loginWithGoogle(result.user.displayName, result.user.email);
+        navigate('/dashboard');
+      } else {
         await startRedirect();
-        return;
       }
-      const result = await popupPromise;
-      await loginWithGoogle(result.user.displayName, result.user.email);
-      navigate('/dashboard');
     } catch (err) {
-      if (err.code === 'auth/popup-blocked') {
-        await startRedirect();
-        return;
-      }
       if (!IGNORED_AUTH_ERRORS.includes(err.code)) {
         setError(err.response?.data?.message || err.message || 'Google Sign-In failed. Please check your internet connection.');
       }
     } finally {
-      window.open = origOpen;
       setLoading(false);
     }
   };
