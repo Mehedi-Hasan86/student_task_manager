@@ -8,3 +8,4 @@ desktop.ini
 ~$*
 report/atlas-credentials.env
 report/*firebase-adminsdk*.json
+opencode.json
